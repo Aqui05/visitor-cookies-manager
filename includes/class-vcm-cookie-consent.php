@@ -30,7 +30,6 @@ class VCM_Cookie_Consent {
         if ($this->is_consent_given()) {
             return;
         }
-
         ?>
         <div id="vcm-cookie-consent-bar" class="vcm-cookie-consent-bar">
             <div class="vcm-cookie-content">
@@ -78,13 +77,15 @@ class VCM_Cookie_Consent {
 
         $consent = isset($_POST['consent']) ? sanitize_text_field($_POST['consent']) : 'refused';
 
-        // Définir un cookie de consentement
+        // Définir un cookie de consentement pour un an
         setcookie(
             'vcm_cookie_consent', 
             $consent, 
             time() + (365 * DAY_IN_SECONDS), 
             COOKIEPATH, 
-            COOKIE_DOMAIN
+            COOKIE_DOMAIN,
+            true,  // Secure
+            true   // HttpOnly
         );
 
         wp_send_json_success(array(
@@ -93,6 +94,7 @@ class VCM_Cookie_Consent {
     }
 
     private function is_consent_given() {
+        // Vérifier si le cookie de consentement existe
         return isset($_COOKIE['vcm_cookie_consent']);
     }
 
