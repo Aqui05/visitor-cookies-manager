@@ -1,3 +1,4 @@
+
 <?php
 if (!defined('ABSPATH')) {
     exit;
@@ -20,10 +21,9 @@ class VCM_Visitors_List_Table extends WP_List_Table {
         $this->data_collector = VCM_Data_Collector::get_instance();
     }
 
-
     public function get_columns() {
         return [
-            'cb'            => '<input type="checkbox" />', // Ajout de la case "tout sélectionner"
+            'cb'            => '<input type="checkbox" />',
             'user_agent'    => __('User Agent', 'visitor-cookies-manager'),
             'device_type'   => __('Type de terminal', 'visitor-cookies-manager'),
             'ip_address'    => __('Adresse IP', 'visitor-cookies-manager'),
@@ -32,14 +32,12 @@ class VCM_Visitors_List_Table extends WP_List_Table {
         ];
     }
 
-
     public function column_cb($item) {
         return sprintf(
-            '<input type="checkbox" name="visitor_ids[]" value="%s" />',
+            '<input type="checkbox" name="visitors_ids[]" value="%s" />',
             $item['id']
         );
-    }    
-    
+    }
 
     public function column_default($item, $column_name) {
         switch ($column_name) {
@@ -76,7 +74,7 @@ class VCM_Visitors_List_Table extends WP_List_Table {
         $start_date = isset($_GET['start_date']) ? sanitize_text_field($_GET['start_date']) : '';
         $end_date = isset($_GET['end_date']) ? sanitize_text_field($_GET['end_date']) : '';
 
-        $per_page = 20;
+         $per_page = 20;
         $current_page = $this->get_pagenum();
 
         $args = [
@@ -106,7 +104,29 @@ class VCM_Visitors_List_Table extends WP_List_Table {
     }
 
     public function get_bulk_actions() {
-        return [];
+        return [
+            'export_selected' => __('Exporter la sélection', 'visitor-cookies-manager')
+        ];
     }
-    
+
+    public function process_bulk_action() {
+        if ($this->current_action() === 'export_selected') {
+            $selected_ids = isset($_GET['visitors_ids']) ? array_map('intval', $_GET['visitors_ids']) : [];
+        
+            if (empty($selected_ids)) {
+                wp_die(__('Aucun élément sélectionné pour l\'exportation.', 'visitor-cookies-manager'));
+            }
+        
+            // Récupérer les données
+            $data_collector = VCM_Data_Collector::get_instance();
+            $data = $data_collector->get_visitors_data_by_ids($selected_ids);
+        
+            // Utiliser la classe VCM_Export
+            $exporter = VCM_Export::get_instance();
+            $exporter->generate_csv($data['data'], 'selected_visitors');
+            
+            exit;
+        }
+        
+    }
 }
