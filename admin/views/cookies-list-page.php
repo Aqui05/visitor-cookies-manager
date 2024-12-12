@@ -3,7 +3,23 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
+function get_device_type($user_agent) {
+    if (preg_match('/mobile/i', $user_agent)) {
+        return 'Mobile';
+    } elseif (preg_match('/tablet|ipad/i', $user_agent)) {
+        return 'Tablette';
+    } elseif (preg_match('/linux|windows|macintosh|x11/i', $user_agent)) {
+        return 'Desktop';
+    } else {
+        return 'Inconnu';
+    }
+}
+
+
+
 ?>
+
 <div class="wrap vcm-admin-page">
     <h1><?php _e('Visitor Cookies Manager', 'visitor-cookies-manager'); ?></h1>
 
@@ -28,34 +44,47 @@ if (!defined('ABSPATH')) {
         </div>
     </form>
 
+    <div>
+        <br>
+        <br>
+    </div>
+
     <table class="wp-list-table widefat fixed striped">
         <thead>
             <tr>
-                <th><?php _e('ID', 'visitor-cookies-manager'); ?></th>
+                <th><?php _e('User Agent', 'visitor-cookies-manager'); ?></th>
+                <th><?php _e('Type de terminal', 'visitor-cookies-manager'); ?></th>
                 <th><?php _e('Adresse IP', 'visitor-cookies-manager'); ?></th>
                 <th><?php _e('Type d\'appareil', 'visitor-cookies-manager'); ?></th>
                 <th><?php _e('Est Mobile', 'visitor-cookies-manager'); ?></th>
                 <th><?php _e('Date de visite', 'visitor-cookies-manager'); ?></th>
             </tr>
         </thead>
+
+
         <tbody>
-            <?php if (!empty($visitors_data['data'])) : ?>
-                <?php foreach ($visitors_data['data'] as $visitor) : ?>
-                    <tr>
-                        <td><?php echo esc_html($visitor['id']); ?></td>
-                        <td><?php echo esc_html($visitor['ip_address']); ?></td>
-                        <td><?php echo esc_html($visitor['device_type']); ?></td>
-                        <td><?php echo $visitor['is_mobile'] ? __('Oui', 'visitor-cookies-manager') : __('Non', 'visitor-cookies-manager'); ?></td>
-                        <td><?php echo esc_html($visitor['visit_date']); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php else : ?>
-                <tr>
-                    <td colspan="5"><?php _e('Aucune donnée trouvée.', 'visitor-cookies-manager'); ?></td>
-                </tr>
-            <?php endif; ?>
-        </tbody>
+    <?php if (!empty($visitors_data['data'])) : ?>
+        <?php foreach ($visitors_data['data'] as $visitor) : ?>
+            <?php $device_type = get_device_type($visitor['user_agent']); ?>
+            <tr>
+                <td><?php echo esc_html($visitor['user_agent']); ?></td>
+                <td><?php echo esc_html($device_type); ?></td>
+                <td><?php echo esc_html($visitor['ip_address']); ?></td>
+                <td><?php echo esc_html($visitor['device_type']); ?></td>
+                <td><?php echo $visitor['is_mobile'] ? __('Oui', 'visitor-cookies-manager') : __('Non', 'visitor-cookies-manager'); ?></td>
+                <td><?php echo esc_html($visitor['visit_date']); ?></td>
+            </tr>
+        <?php endforeach; ?>
+    <?php else : ?>
+        <tr>
+            <td colspan="6"><?php _e('Aucune donnée trouvée.', 'visitor-cookies-manager'); ?></td>
+        </tr>
+    <?php endif; ?>
+</tbody>
+
     </table>
+
+    
 
     <div class="vcm-pagination">
         <?php
@@ -75,6 +104,10 @@ if (!defined('ABSPATH')) {
         ?>
     </div>
 
+    <div>
+        <br>
+        <br>
+    </div>
     <div class="vcm-export-section">
         <button id="vcm-export-btn" class="button button-primary">
             <?php _e('Exporter en CSV', 'visitor-cookies-manager'); ?>
