@@ -76,6 +76,66 @@ class VCM_Data_Collector {
         }
     }
 
+
+    //Sélectionner les visiteurs avec leur IDs
+
+    public function get_visitors_by_ids($ids) {
+        global $wpdb;
+    
+        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+        $query = $wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE id IN ($placeholders)",
+            $ids
+        );
+    
+        return $wpdb->get_results($query, ARRAY_A);
+    }
+
+    
+
+    /*public function get_visitors_data_by_ids($ids) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'visitor_cookies';
+
+        // Préparer la requête SQL avec des paramètres sécurisés
+        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+        $query = $wpdb->prepare(
+            "SELECT * FROM $table_name WHERE id IN ($placeholders)",
+            $ids
+        );
+
+        return $wpdb->get_results($query, ARRAY_A);
+    }*/
+    
+
+    public function get_visitors_data_by_ids($ids) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'visitor_cookies';
+    
+        // Préparer les IDs pour la requête SQL
+        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+    
+        // Construire la requête SQL
+        $query = $wpdb->prepare(
+            "SELECT * FROM $table_name WHERE id IN ($placeholders)",
+            $ids
+        );
+    
+        // Récupérer les données correspondant aux IDs
+        $results = $wpdb->get_results($query, ARRAY_A);
+    
+        // Compter le nombre total d'éléments
+        $total_items = count($results);
+    
+        return array(
+            'data' => $results,
+            'total_items' => $total_items
+        );
+    }
+    
+
+
+
     // Méthode pour récupérer les données avec filtrage et pagination
     public function get_visitors_data($args = array()) {
         global $wpdb;
@@ -146,4 +206,18 @@ class VCM_Data_Collector {
             'total_pages' => ceil($total_items / $params['per_page'])
         );
     }
+
+
+    public function get_all_visitors_data() {
+        global $wpdb;
+    
+        $table_name = $wpdb->prefix . 'visitor_cookies';
+        $query = "SELECT * FROM {$table_name}";
+        $results = $wpdb->get_results($query, ARRAY_A);
+    
+        return [
+            'data' => $results,
+        ];
+    }
+    
 }

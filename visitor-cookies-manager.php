@@ -9,7 +9,7 @@ Author URI: http://exemple.com/
 Text Domain: visitor-cookies-manager
 */
 
-// Sécurité : bloquer l'accès direct au fichier
+// Sécurité : bloquer l'accès direct au fichier [L'ajouter au débur de tous les fichiers PHP]
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -74,7 +74,7 @@ class VisitorCookiesManager {
     }
 
     public function deactivate() {
-        // Optionnel : supprimer les options et tables si nécessaire
+        //  : supprimer les options et tables 
         // delete_option('vcm_cookie_consent_enabled');
         // $wpdb->query("DROP TABLE IF EXISTS " . $wpdb->prefix . "visitor_cookies");
     }

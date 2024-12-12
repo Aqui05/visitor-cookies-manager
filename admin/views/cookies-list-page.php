@@ -32,16 +32,21 @@ $visitors_list_table = new VCM_Visitors_List_Table();
         </div>
     </form>
 
-    <form method="get">
+
+    <form method="post" action="<?php echo esc_url(admin_url('admin-ajax.php')); ?>">
+        <input type="hidden" name="action" value="vcm_export_cookies">
         <?php 
-        $visitors_list_table->prepare_items();
-        $visitors_list_table->display(); 
+            $visitors_list_table->prepare_items();
+            $visitors_list_table->display(); 
         ?>
+        <input type="submit" class="button button-primary" value="<?php _e('Exporter les sélectionnés', 'visitor-cookies-manager'); ?>">
     </form>
 
-    <div class="vcm-export-section">
-        <button id="vcm-export-btn" class="button button-primary">
-            <?php _e('Exporter en CSV', 'visitor-cookies-manager'); ?>
-        </button>
-    </div>
+<!--
+        <div class="vcm-export-section">
+            <button id="vcm-export-btn" class="button button-primary">
+                <?php _e('Exporter en CSV', 'visitor-cookies-manager'); ?>
+            </button>
+        </div>
+-->
 </div>
