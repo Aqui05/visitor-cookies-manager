@@ -22,6 +22,9 @@ class VCM_Admin {
 
         // Actions AJAX
         add_action('wp_ajax_vcm_export_data', array($this, 'ajax_export_data'));
+
+        // Inclure la classe WP_List_Table personnalisée
+        require_once VCM_PLUGIN_DIR . 'includes/class-vcm-list-table.php';
     }
 
     public function add_admin_menu() {
@@ -42,26 +45,11 @@ class VCM_Admin {
             wp_die(__('Vous n\'avez pas les permissions nécessaires.', 'visitor-cookies-manager'));
         }
 
-        // Récupérer les données
-        $data_collector = VCM_Data_Collector::get_instance();
-        
-        $page = isset($_GET['paged']) ? intval($_GET['paged']) : 1;
-        $search = isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '';
-        $device_type = isset($_GET['device_type']) ? sanitize_text_field($_GET['device_type']) : '';
-        $start_date = isset($_GET['start_date']) ? sanitize_text_field($_GET['start_date']) : '';
-        $end_date = isset($_GET['end_date']) ? sanitize_text_field($_GET['end_date']) : '';
-
-        $visitors_data = $data_collector->get_visitors_data(array(
-            'page' => $page,
-            'search' => $search,
-            'device_type' => $device_type,
-            'start_date' => $start_date,
-            'end_date' => $end_date
-        ));
-
         // Charger la vue
         include VCM_PLUGIN_DIR . 'admin/views/cookies-list-page.php';
     }
+
+    // Autres méthodes restent les mêmes...
 
     public function enqueue_admin_scripts($hook) {
         if ($hook !== 'toplevel_page_visitor-cookies-manager') {
@@ -92,4 +80,4 @@ class VCM_Admin {
 
     public function ajax_export_data() {
     }
-}   
+}

@@ -1,0 +1,19 @@
+.vcm-admin-page {
+    max-width: 100%;
+}
+
+.vcm-filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.vcm-filters input,
+.vcm-filters select {
+    padding: 5px;
+    margin-right: 10px;
+}
+
+.vcm-export-section {
+    margin-top: 20px;
+}
