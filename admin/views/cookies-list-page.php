@@ -6,6 +6,11 @@ if (!defined('ABSPATH')) {
 
 // Créer une instance de la liste
 $visitors_list_table = new VCM_Visitors_List_Table();
+
+// Add nonce field for security
+wp_nonce_field('bulk-visitors');
+
+
 $visitors_list_table->process_bulk_action();
 ?>
 
@@ -40,4 +45,5 @@ $visitors_list_table->process_bulk_action();
             $visitors_list_table->display(); 
         ?>
     </form>
+
 </div>

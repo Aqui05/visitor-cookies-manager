@@ -110,7 +110,9 @@ class VCM_Visitors_List_Table extends WP_List_Table {
     }
 
     public function process_bulk_action() {
+        // Check if the export action is triggered
         if ($this->current_action() === 'export_selected') {
+
             $selected_ids = isset($_GET['visitors_ids']) ? array_map('intval', $_GET['visitors_ids']) : [];
         
             if (empty($selected_ids)) {
@@ -124,9 +126,8 @@ class VCM_Visitors_List_Table extends WP_List_Table {
             // Utiliser la classe VCM_Export
             $exporter = VCM_Export::get_instance();
             $exporter->generate_csv($data['data'], 'selected_visitors');
-            
+
             exit;
         }
-        
     }
 }
