@@ -64,6 +64,14 @@ class VCM_Admin {
             true
         );
 
+        /*wp_enqueue_script(
+            'vcm-export', 
+            VCM_PLUGIN_URL . 'admin/js/export.js', 
+            array('jquery'), 
+            VCM_VERSION, 
+            true
+        );*/
+
         wp_enqueue_style(
             'vcm-admin-style', 
             VCM_PLUGIN_URL . 'assets/css/admin.css', 

@@ -71,7 +71,7 @@ class VCM_Cookie_Consent {
         ));
     }
 
-    public function ajax_set_cookie_consent() {
+    /*public function ajax_set_cookie_consent() {
         // Vérifier le nonce
         check_ajax_referer('vcm-cookie-nonce', 'security');
 
@@ -88,6 +88,33 @@ class VCM_Cookie_Consent {
             true   // HttpOnly
         );
 
+        wp_send_json_success(array(
+            'message' => __('Votre choix a été enregistré.', 'visitor-cookies-manager')
+        ));
+    }*/
+
+    public function ajax_set_cookie_consent() {
+        // Vérifier le nonce
+        check_ajax_referer('vcm-cookie-nonce', 'security');
+    
+        $consent = isset($_POST['consent']) ? sanitize_text_field($_POST['consent']) : 'refused';
+    
+        // Définir un cookie de consentement pour un an
+        setcookie(
+            'vcm_cookie_consent', 
+            $consent, 
+            time() + (365 * DAY_IN_SECONDS), 
+            COOKIEPATH, 
+            COOKIE_DOMAIN,
+            true,  // Secure
+            true   // HttpOnly
+        );
+    
+        // Si le consentement est accepté, déclencher la collecte des données
+        if ($consent === 'accepted') {
+            do_action('vcm_trigger_data_collection');
+        }
+    
         wp_send_json_success(array(
             'message' => __('Votre choix a été enregistré.', 'visitor-cookies-manager')
         ));

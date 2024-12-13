@@ -9,7 +9,7 @@ Author URI: http://exemple.com/
 Text Domain: visitor-cookies-manager
 */
 
-// Sécurité : bloquer l'accès direct au fichier [L'ajouter au débur de tous les fichiers PHP]
+// Sécurité : bloquer l'accès direct
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -40,19 +40,18 @@ class VisitorCookiesManager {
     }
 
     private function init_hooks() {
-        // Activation du plugin
-        register_activation_hook(__FILE__, array($this, 'activate'));
-
-        // Désactivation du plugin
-        register_deactivation_hook(__FILE__, array($this, 'deactivate'));
+        // Activation et désactivation du plugin
+        register_activation_hook(__FILE__, [$this, 'activate']);
+        register_deactivation_hook(__FILE__, [$this, 'deactivate']);
 
         // Initialisation
-        add_action('init', array($this, 'load_plugin_textdomain'));
-        add_action('plugins_loaded', array($this, 'init_components'));
+        add_action('init', [$this, 'load_plugin_textdomain']);
+        add_action('plugins_loaded', [$this, 'init_components']);
+        // Dans le constructeur de votre classe ou dans le fichier principal du plugin
+add_action('wp_ajax_generate_visitors_csv', array($this, 'generate_visitors_csv'));
     }
 
     public function activate() {
-        // Créer les tables de base de données nécessaires
         global $wpdb;
         $charset_collate = $wpdb->get_charset_collate();
 
@@ -63,18 +62,18 @@ class VisitorCookiesManager {
             device_type varchar(20) NOT NULL,
             is_mobile tinyint(1) NOT NULL,
             visit_date datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
-            PRIMARY KEY  (id)
+            PRIMARY KEY (id)
         ) $charset_collate;";
 
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($sql);
 
-        // Ajouter des options par défaut
         add_option('vcm_cookie_consent_enabled', true);
     }
 
     public function deactivate() {
-        //  : supprimer les options et tables 
+        // Suppression des données si nécessaire
+        // global $wpdb;
         // delete_option('vcm_cookie_consent_enabled');
         // $wpdb->query("DROP TABLE IF EXISTS " . $wpdb->prefix . "visitor_cookies");
     }
@@ -89,6 +88,9 @@ class VisitorCookiesManager {
         VCM_Admin::get_instance();
         VCM_Cookie_Consent::get_instance();
         VCM_Export::get_instance();
+
+        // Ajouter une action personnalisée pour la collecte de données
+        add_action('vcm_trigger_data_collection', [VCM_Data_Collector::get_instance(), 'collect_visitor_data']);
     }
 }
 

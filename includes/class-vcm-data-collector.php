@@ -23,15 +23,21 @@ class VCM_Data_Collector {
         if (is_admin() || wp_doing_ajax()) {
             return;
         }
-
+    
+        // Vérifier si le consentement est donné
+        $cookie_consent = VCM_Cookie_Consent::get_instance();
+        if (!$cookie_consent->is_consent_accepted()) {
+            return;
+        }
+    
         global $wpdb;
         $table_name = $wpdb->prefix . 'visitor_cookies';
-
+    
         $ip_address = $this->get_ip_address();
         $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
         $device_type = $this->detect_device_type($user_agent);
         $is_mobile = wp_is_mobile() ? 1 : 0;
-
+    
         $wpdb->insert(
             $table_name,
             array(
@@ -44,6 +50,39 @@ class VCM_Data_Collector {
             array('%s', '%s', '%s', '%d', '%s')
         );
     }
+
+    /*public function collect_visitor_data() {
+        // Vérifier si le consentement est donné
+        $cookie_consent = new VCM_Cookie_Consent();
+        if (!$cookie_consent->is_consent_accepted()) {
+            return;
+        }
+    
+        // Ne pas collecter pour les pages admin ou les requêtes AJAX
+        if (is_admin() || wp_doing_ajax()) {
+            return;
+        }
+    
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'visitor_cookies';
+    
+        $ip_address = $this->get_ip_address();
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $device_type = $this->detect_device_type($user_agent);
+        $is_mobile = wp_is_mobile() ? 1 : 0;
+    
+        $wpdb->insert(
+            $table_name,
+            array(
+                'ip_address' => $ip_address,
+                'user_agent' => $user_agent,
+                'device_type' => $device_type,
+                'is_mobile' => $is_mobile,
+                'visit_date' => current_time('mysql')
+            ),
+            array('%s', '%s', '%s', '%d', '%s')
+        );
+    }*/
 
     private function get_ip_address() {
         $ip_keys = array('HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR');
