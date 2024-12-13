@@ -109,10 +109,10 @@ class VCM_Visitors_List_Table extends WP_List_Table {
         ];
     }
 
+    
     public function process_bulk_action() {
         // Check if the export action is triggered
         if ($this->current_action() === 'export_selected') {
-
             $selected_ids = isset($_GET['visitors_ids']) ? array_map('intval', $_GET['visitors_ids']) : [];
         
             if (empty($selected_ids)) {
@@ -125,9 +125,15 @@ class VCM_Visitors_List_Table extends WP_List_Table {
         
             // Utiliser la classe VCM_Export
             $exporter = VCM_Export::get_instance();
-            $exporter->generate_csv($data['data'], 'selected_visitors');
+            $csv_info = $exporter->generate_csv($data['data'], 'selected_visitors', '/home/aquilas/Téléchargements/');
+            
+            // Envoyer les informations de téléchargement
+            if ($csv_info['success']) {
 
-            exit;
+            } else {
+                wp_die(__('Échec de la génération du fichier CSV.', 'visitor-cookies-manager'));
+            }
         }
     }
+    
 }

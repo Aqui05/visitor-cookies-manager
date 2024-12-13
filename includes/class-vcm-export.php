@@ -86,44 +86,110 @@ class VCM_Export {
 
 
 
-    public function generate_csv($data, $export_type = 'visitors') {
-        // En-têtes pour forcer le téléchargement
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="visitor_cookies_export_' . $export_type . '_' . date('Y-m-d_H-i-s') . '.csv"');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-    
-        // Ouvrir un flux de sortie
-        $output = fopen('php://output', 'w');
-    
-        // Définir une fin de ligne personnalisée
-        $eol = "\n";
-    
-        // Écrire les en-têtes du fichier CSV
-        fputcsv($output, [
-            'ID',
-            'Adresse IP',
-            'User Agent',
-            'Type d\'appareil',
-            'Est Mobile',
-            'Date de visite',
-        ], ',', '"');
-    
-        // Écrire chaque ligne de données
-        foreach ($data as $row) {
-            fputcsv($output, [
-                $row['id'] ?? '',
-                $row['ip_address'] ?? '',
-                $row['user_agent'] ?? '',
-                $this->get_device_type($row['user_agent'] ?? ''),
-                $row['is_mobile'] ? 'Oui' : 'Non',
-                $row['visit_date'] ?? '',
-            ], ',', '"');
+    public function generate_csv($data, $export_type = 'visitors', $custom_dir = null) {
+        // Désactiver toute sortie précédente et la mise en tampon
+        if (ob_get_level()) {
+            ob_end_clean();
         }
     
-        fclose($output);
-        //exit;
+        // Choisir le répertoire de stockage
+        $upload_dir = $custom_dir ?? sys_get_temp_dir() . '/csv/';
+        
+        // Créer le répertoire s'il n'existe pas
+        if (!file_exists($upload_dir)) {
+            // Utiliser le mode 0755 pour plus de sécurité
+            if (!mkdir($upload_dir, 0755, true)) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Impossible de créer le répertoire CSV',
+                    'error_details' => error_get_last()
+                ]);
+                exit();
+            }
+        }
+    
+        // Vérifier les permissions d'écriture du répertoire
+        if (!is_writable($upload_dir)) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Le répertoire n\'est pas accessible en écriture',
+                'directory' => $upload_dir
+            ]);
+            exit();
+        }
+    
+        // Nom de fichier unique
+        $filename = $export_type . '_' . date('Y-m-d_H-i-s') . '.csv';
+        $filepath = $upload_dir . $filename;
+    
+        // Tenter d'ouvrir le fichier en écriture
+        $fp = @fopen($filepath, 'w');
+        
+        // Vérification de l'ouverture du fichier
+        if ($fp === false) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Impossible de créer le fichier CSV',
+                'error_details' => [
+                    'last_error' => error_get_last(),
+                    'filepath' => $filepath,
+                    'temp_dir' => sys_get_temp_dir()
+                ]
+            ]);
+            exit();
+        }
+    
+        // Vérifier si on peut écrire
+        if (fwrite($fp, '') === false) {
+            fclose($fp);
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Impossible d\'écrire dans le fichier CSV'
+            ]);
+            exit();
+        }
+    
+        // Écrire les en-têtes
+        fputcsv($fp, [
+            'ID', 
+            'Adresse IP', 
+            'User Agent', 
+            'Type d\'appareil', 
+            'Est Mobile', 
+            'Date de visite'
+        ]);
+        
+        // Écrire les données
+        foreach ($data as $row) {
+            fputcsv($fp, [
+                $row['id'] ?? '', 
+                $row['ip_address'] ?? '', 
+                $row['user_agent'] ?? '', 
+                $this->get_device_type($row['user_agent'] ?? ''), 
+                $row['is_mobile'] ? 'Oui' : 'Non', 
+                $row['visit_date'] ?? ''
+            ]);
+        }
+        
+        // Fermer le fichier
+        fclose($fp);
+    
+        // Répondre avec les informations du fichier en JSON
+        return [
+            'success' => true,
+            'filename' => $filename,
+            'filepath' => $filepath,
+            'relative_path' => '/csv/' . $filename
+        ];
     }
+    
+    
+    
+    
 
     private function get_device_type($user_agent) {
         if (preg_match('/mobile/i', $user_agent)) {
@@ -136,4 +202,5 @@ class VCM_Export {
             return 'Inconnu';
         }
     }
+
 }
