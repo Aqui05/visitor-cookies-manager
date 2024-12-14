@@ -44,8 +44,6 @@ $visitors_list_table->process_bulk_action();
 
 
 
-?>
-
 <script type="text/javascript">
 jQuery(document).ready(function($) {
     // Gérer le clic sur le bouton "Exporter la sélection"

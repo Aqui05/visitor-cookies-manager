@@ -85,35 +85,111 @@ class VCM_Data_Collector {
     }*/
 
     private function get_ip_address() {
-        $ip_keys = array('HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR');
+        // Liste des clés potentielles pour l'adresse IP
+        $ip_keys = array(
+            'HTTP_CLIENT_IP', 
+            'HTTP_X_FORWARDED_FOR', 
+            'HTTP_X_FORWARDED', 
+            'HTTP_X_CLUSTER_CLIENT_IP', 
+            'HTTP_FORWARDED_FOR', 
+            'HTTP_FORWARDED', 
+            'REMOTE_ADDR'
+        );
         
+        // Vérifier les en-têtes de proxy et de forwarding
         foreach ($ip_keys as $key) {
             if (array_key_exists($key, $_SERVER) === true) {
                 foreach (explode(',', $_SERVER[$key]) as $ip) {
                     $ip = trim($ip);
-                    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
+                    
+                    // Validation avancée de l'IP
+                    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
                         return $ip;
                     }
                 }
             }
         }
         
-        return $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+        // Essayer de récupérer l'adresse IP réelle en local
+        if (isset($_SERVER['SERVER_ADDR']) && $_SERVER['SERVER_ADDR'] !== '127.0.0.1') {
+            return $_SERVER['SERVER_ADDR'];
+        }
+        
+        // Dernière option : utiliser des méthodes alternatives
+        try {
+            // Essayer de récupérer l'IP via des commandes système
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                // Commande Windows
+                $output = shell_exec('ipconfig | findstr /I "IPv4 Address"');
+                preg_match('/\d+\.\d+\.\d+\.\d+/', $output, $matches);
+                if (!empty($matches[0])) {
+                    return $matches[0];
+                }
+            } else {
+                // Commande Unix/Linux
+                $output = shell_exec("hostname -I | awk '{print $1}'");
+                if (filter_var(trim($output), FILTER_VALIDATE_IP)) {
+                    return trim($output);
+                }
+            }
+        } catch (Exception $e) {
+            // Gestion silencieuse des erreurs
+        }
+        
+        return 'Unknown';
     }
 
     private function detect_device_type($user_agent) {
         $user_agent = strtolower($user_agent);
-
-        if (strpos($user_agent, 'mobile') !== false) {
-            return 'mobile';
-        } elseif (strpos($user_agent, 'tablet') !== false) {
-            return 'tablet';
-        } elseif (preg_match('/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i', $user_agent)) {
-            return 'mobile';
-        } else {
-            return 'desktop';
+    
+        $device_type = 'Desktop'; // Valeur par défaut
+        $os = 'Unknown';
+        $browser = 'Unknown';
+    
+        // Détection du type d'appareil
+        if (strpos($user_agent, 'mobile') !== false || strpos($user_agent, 'android') !== false || strpos($user_agent, 'iphone') !== false) {
+            $device_type = 'Mobile';
+        } elseif (strpos($user_agent, 'tablet') !== false || strpos($user_agent, 'ipad') !== false) {
+            $device_type = 'Tablet';
         }
+    
+        // Détection du système d'exploitation
+        if (strpos($user_agent, 'windows nt') !== false) {
+            $os = 'Windows';
+        } elseif (strpos($user_agent, 'mac os') !== false || strpos($user_agent, 'macintosh') !== false) {
+            $os = 'Mac OS';
+        } elseif (strpos($user_agent, 'linux') !== false) {
+            $os = 'Linux';
+        } elseif (strpos($user_agent, 'android') !== false) {
+            $os = 'Android';
+        } elseif (strpos($user_agent, 'iphone') !== false || strpos($user_agent, 'ipad') !== false || strpos($user_agent, 'ipod') !== false) {
+            $os = 'iOS';
+        } elseif (strpos($user_agent, 'blackberry') !== false) {
+            $os = 'BlackBerry';
+        } elseif (strpos($user_agent, 'windows phone') !== false) {
+            $os = 'Windows Phone';
+        }
+    
+        // Détection du navigateur
+        if (strpos($user_agent, 'edg') !== false) {
+            $browser = 'Microsoft Edge';
+        } elseif (strpos($user_agent, 'chrome') !== false) {
+            $browser = 'Google Chrome';
+        } elseif (strpos($user_agent, 'safari') !== false && strpos($user_agent, 'chrome') === false) {
+            $browser = 'Safari';
+        } elseif (strpos($user_agent, 'firefox') !== false) {
+            $browser = 'Mozilla Firefox';
+        } elseif (strpos($user_agent, 'opera') !== false || strpos($user_agent, 'opr') !== false) {
+            $browser = 'Opera';
+        } elseif (strpos($user_agent, 'msie') !== false || strpos($user_agent, 'trident') !== false) {
+            $browser = 'Internet Explorer';
+        }
+    
+        // Concaténation des informations en une chaîne
+        return sprintf('%s | %s | %s', $device_type, $os, $browser);
     }
+    
+    
 
 
     //Sélectionner les visiteurs avec leur IDs

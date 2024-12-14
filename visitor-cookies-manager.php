@@ -24,6 +24,9 @@ require_once VCM_PLUGIN_DIR . 'includes/class-vcm-data-collector.php';
 require_once VCM_PLUGIN_DIR . 'includes/class-vcm-admin.php';
 require_once VCM_PLUGIN_DIR . 'includes/class-vcm-cookie-consent.php';
 require_once VCM_PLUGIN_DIR . 'includes/class-vcm-export.php';
+// Ajouter le nouveau fichier de paramètres
+require_once VCM_PLUGIN_DIR . 'includes/class-vcm-cookie-consent-settings.php';
+
 
 class VisitorCookiesManager {
     private static $instance = null;
@@ -60,7 +63,7 @@ class VisitorCookiesManager {
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             ip_address varchar(45) NOT NULL,
             user_agent text NOT NULL,
-            device_type varchar(20) NOT NULL,
+            device_type varchar(100) NOT NULL,
             is_mobile tinyint(1) NOT NULL,
             visit_date datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
             PRIMARY KEY (id)
@@ -128,6 +131,7 @@ class VisitorCookiesManager {
         VCM_Admin::get_instance();
         VCM_Cookie_Consent::get_instance();
         VCM_Export::get_instance();
+        VCM_Cookie_Consent_Settings::get_instance();
 
         // Ajouter une action personnalisée pour la collecte de données
         add_action('vcm_trigger_data_collection', [VCM_Data_Collector::get_instance(), 'collect_visitor_data']);

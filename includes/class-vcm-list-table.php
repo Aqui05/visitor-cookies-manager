@@ -43,7 +43,7 @@ class VCM_Visitors_List_Table extends WP_List_Table {
             case 'user_agent':
                 return esc_html($item['user_agent']);
             case 'device_type':
-                return esc_html($this->get_device_type($item['user_agent']));
+                return esc_html($item['device_type']);
             case 'ip_address':
                 return esc_html($item['ip_address']);
             case 'is_mobile':

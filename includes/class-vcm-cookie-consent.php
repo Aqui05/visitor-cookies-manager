@@ -1,6 +1,7 @@
 <?php
 class VCM_Cookie_Consent {
     private static $instance = null;
+    private $settings;
 
     public static function get_instance() {
         if (self::$instance === null) {
@@ -10,6 +11,9 @@ class VCM_Cookie_Consent {
     }
 
     private function __construct() {
+        // Charger les paramètres
+        $this->settings = VCM_Cookie_Consent_Settings::get_instance()->get_settings();
+        
         $this->init_hooks();
     }
 
@@ -30,17 +34,20 @@ class VCM_Cookie_Consent {
         if ($this->is_consent_given()) {
             return;
         }
+        
+        // Utiliser les paramètres personnalisés
+        $settings = $this->settings;
         ?>
         <div id="vcm-cookie-consent-bar" class="vcm-cookie-consent-bar">
             <div class="vcm-cookie-content">
                 <p>
-                    <?php _e('Ce site utilise des cookies pour améliorer votre expérience de navigation.', 'visitor-cookies-manager'); ?>
+                    <?php echo esc_html($settings['banner_text']); ?>
                 </p>
                 <div class="vcm-cookie-buttons">
-                    <button id="vcm-accept-cookies" class="vcm-button vcm-accept">
+                    <button id="vcm-accept-cookies" class="vcm-button vcm-accept" style="background-color: <?php echo esc_attr($settings['accept_button_color']); ?>">
                         <?php _e('Accepter', 'visitor-cookies-manager'); ?>
                     </button>
-                    <button id="vcm-refuse-cookies" class="vcm-button vcm-refuse">
+                    <button id="vcm-refuse-cookies" class="vcm-button vcm-refuse" style="background-color: <?php echo esc_attr($settings['refuse_button_color']); ?>">
                         <?php _e('Refuser', 'visitor-cookies-manager'); ?>
                     </button>
                 </div>
