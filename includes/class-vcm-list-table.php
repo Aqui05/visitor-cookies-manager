@@ -1,4 +1,3 @@
-
 <?php
 if (!defined('ABSPATH')) {
     exit;
@@ -34,8 +33,8 @@ class VCM_Visitors_List_Table extends WP_List_Table {
 
     public function column_cb($item) {
         return sprintf(
-            '<input type="checkbox" name="visitors_ids[]" value="%s" />',
-            $item['id']
+            '<input type="checkbox" name="visitors_ids[]" value="%d" />',
+            intval($item['id'])
         );
     }
 
@@ -50,56 +49,52 @@ class VCM_Visitors_List_Table extends WP_List_Table {
             case 'is_mobile':
                 return $item['is_mobile'] ? __('Oui', 'visitor-cookies-manager') : __('Non', 'visitor-cookies-manager');
             case 'visit_date':
-                return esc_html($item['visit_date']);
+                return wp_date(get_option('date_format'), strtotime($item['visit_date']));
             default:
-                return print_r($item, true);
+                return esc_html(print_r($item, true));
         }
     }
 
     private function get_device_type($user_agent) {
         if (preg_match('/mobile/i', $user_agent)) {
-            return 'Mobile';
+            return __('Mobile', 'visitor-cookies-manager');
         } elseif (preg_match('/tablet|ipad/i', $user_agent)) {
-            return 'Tablette';
+            return __('Tablette', 'visitor-cookies-manager');
         } elseif (preg_match('/linux|windows|macintosh|x11/i', $user_agent)) {
-            return 'Desktop';
+            return __('Desktop', 'visitor-cookies-manager');
         } else {
-            return 'Inconnu';
+            return __('Inconnu', 'visitor-cookies-manager');
         }
     }
 
     public function prepare_items() {
-        $search = isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '';
+        $search      = isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '';
+        $start_date  = isset($_GET['start_date']) ? sanitize_text_field($_GET['start_date']) : '';
+        $end_date    = isset($_GET['end_date']) ? sanitize_text_field($_GET['end_date']) : '';
         $device_type = isset($_GET['device_type']) ? sanitize_text_field($_GET['device_type']) : '';
-        $start_date = isset($_GET['start_date']) ? sanitize_text_field($_GET['start_date']) : '';
-        $end_date = isset($_GET['end_date']) ? sanitize_text_field($_GET['end_date']) : '';
 
-         $per_page = 20;
+        $per_page     = 20;
         $current_page = $this->get_pagenum();
 
         $args = [
-            'page' => $current_page,
-            'per_page' => $per_page,
-            'search' => $search,
+            'page'        => $current_page,
+            'per_page'    => $per_page,
+            'search'      => $search,
             'device_type' => $device_type,
-            'start_date' => $start_date,
-            'end_date' => $end_date
+            'start_date'  => $start_date,
+            'end_date'    => $end_date
         ];
 
         $data = $this->data_collector->get_visitors_data($args);
 
-        $this->_column_headers = [
-            $this->get_columns(), 
-            [], 
-            []
-        ];
+        $this->_column_headers = [$this->get_columns(), [], []];
 
-        $this->items = $data['data'];
+        $this->items = $data['data'] ?? [];
 
         $this->set_pagination_args([
-            'total_items' => $data['total_count'],
+            'total_items' => $data['total_items'] ?? 0,
             'per_page'    => $per_page,
-            'total_pages' => $data['total_pages']
+            'total_pages' => $data['total_pages'] ?? 1
         ]);
     }
 
@@ -109,31 +104,16 @@ class VCM_Visitors_List_Table extends WP_List_Table {
         ];
     }
 
-    
-    public function process_bulk_action() {
-        // Check if the export action is triggered
-        if ($this->current_action() === 'export_selected') {
-            $selected_ids = isset($_GET['visitors_ids']) ? array_map('intval', $_GET['visitors_ids']) : [];
-        
-            if (empty($selected_ids)) {
-                wp_die(__('Aucun élément sélectionné pour l\'exportation.', 'visitor-cookies-manager'));
-            }
-        
-            // Récupérer les données
-            $data_collector = VCM_Data_Collector::get_instance();
-            $data = $data_collector->get_visitors_data_by_ids($selected_ids);
-        
-            // Utiliser la classe VCM_Export
-            $exporter = VCM_Export::get_instance();
-            $csv_info = $exporter->generate_csv($data['data'], 'selected_visitors', '/home/aquilas/Téléchargements/');
-            
-            // Envoyer les informations de téléchargement
-            if ($csv_info['success']) {
 
-            } else {
-                wp_die(__('Échec de la génération du fichier CSV.', 'visitor-cookies-manager'));
-            }
+    /*public function process_bulk_action() {
+        if ($this->current_action() === 'export_selected') {
+            // Verify nonce
+            //check_admin_referer('bulk-visitors');
+
         }
-    }
+    }*/
     
 }
+
+
+

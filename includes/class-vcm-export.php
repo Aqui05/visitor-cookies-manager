@@ -49,17 +49,17 @@ class VCM_Export {
         ]);
     }
 
-    private function generer_csv($data) {
-        // En-têtes pour le téléchargement
+    public function generate_csv($data) {
+        // En-têtes pour forcer le téléchargement du fichier
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename=visitor_cookies_export_' . date('Y-m-d_H-i-s') . '.csv');
         header('Pragma: no-cache');
         header('Expires: 0');
-
-        // Créer un fichier CSV en mémoire
+    
+        // Créer un fichier temporaire en mémoire
         $output = fopen('php://output', 'w');
-
-        // En-têtes du CSV
+    
+        // Ajouter les en-têtes CSV
         fputcsv($output, array(
             'ID', 
             'Adresse IP', 
@@ -68,7 +68,7 @@ class VCM_Export {
             'Est Mobile', 
             'Date de visite'
         ));
-
+    
         // Écrire les données
         foreach ($data as $row) {
             fputcsv($output, array(
@@ -80,12 +80,16 @@ class VCM_Export {
                 $row['visit_date']
             ));
         }
-
+    
+        // Fermer le fichier
         fclose($output);
+        exit; // Terminer l'exécution du script
     }
+    
 
 
 
+    /*
     public function generate_csv($data, $export_type = 'visitors', $custom_dir = null) {
         // Désactiver toute sortie précédente et la mise en tampon
         if (ob_get_level()) {
@@ -186,7 +190,7 @@ class VCM_Export {
             'relative_path' => '/csv/' . $filename
         ];
     }
-    
+    */
     
     
     
