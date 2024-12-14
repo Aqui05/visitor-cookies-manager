@@ -48,7 +48,8 @@ class VisitorCookiesManager {
         add_action('init', [$this, 'load_plugin_textdomain']);
         add_action('plugins_loaded', [$this, 'init_components']);
         // Dans le constructeur de votre classe ou dans le fichier principal du plugin
-add_action('wp_ajax_generate_visitors_csv', array($this, 'generate_visitors_csv'));
+
+        add_action('wp_ajax_vcm_export_csv', [$this, 'vcm_ajax_export_csv']);
     }
 
     public function activate() {
@@ -81,6 +82,45 @@ add_action('wp_ajax_generate_visitors_csv', array($this, 'generate_visitors_csv'
     public function load_plugin_textdomain() {
         load_plugin_textdomain('visitor-cookies-manager', false, dirname(plugin_basename(__FILE__)) . '/languages/');
     }
+
+
+
+
+
+
+    public function vcm_ajax_export_csv() {
+        // Vérifier les permissions
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Vous n\'avez pas la permission d\'accéder à cette action.', 'visitor-cookies-manager'));
+        }
+
+        // Vérifier la sélection d'IDs
+        $selected_ids = isset($_POST['visitors_ids']) ? array_map('intval', $_POST['visitors_ids']) : [];
+        if (empty($selected_ids)) {
+            wp_die(__('Aucun élément sélectionné pour l\'exportation.', 'visitor-cookies-manager'));
+        }
+
+        // Récupérer les données
+        $data_collector = VCM_Data_Collector::get_instance();
+        $data = $data_collector->get_visitors_data_by_ids($selected_ids);
+
+        if (empty($data['data'])) {
+            wp_die(__('Aucune donnée à exporter.', 'visitor-cookies-manager'));
+        }
+
+        // Générer le CSV et envoyer directement
+        $exporter = VCM_Export::get_instance();
+        $exporter->generate_csv($data['data']);
+    }
+
+
+    private function log_error($message) {
+        if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+            error_log('Visitor Cookies Manager: ' . $message);
+        }
+    }
+
+
 
     public function init_components() {
         // Initialiser les composants du plugin
