@@ -2,48 +2,41 @@ jQuery(document).ready(function($) {
     var $consentBar = $('.vcm-cookie-consent-bar');
     console.log("Barre de consentement initialisée.");
 
+    // Fonction pour récupérer un cookie
+    function getCookie(name) {
+        var cookie = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return cookie ? cookie[2] : null;
+    }
+
+    // Fonction pour vérifier le consentement
     function checkConsent() {
-        // Vérifier si le cookie de consentement existe et sa valeur
-        var cookieConsent = document.cookie.match('(^|;)\\s*vcm_cookie_consent\\s*=\\s*([^;]+)');
-        console.log(cookieConsent)
-    
-        if (cookieConsent) {
-            var valeurConsentement = cookieConsent[2];
-            console.log(valeurConsentement)
-            
-            if (valeurConsentement === 'accepted') {
-                // Si le consentement est accepté, masquer la barre
-                $consentBar.hide();
-            } else if (valeurConsentement === 'refused') {
-                // Si le consentement est refusé, afficher la barre
-                $consentBar.show();
-            } else {
-                // Si la valeur est autre ou invalide, afficher la barre
-                $consentBar.show();
-            }
-        } else {
-            // Si aucun cookie de consentement n'existe, afficher la barre
-            $consentBar.show();
+        var cookieConsent = getCookie('vcm_cookie_consent') || localStorage.getItem('vcm_cookie_consent');
+        console.log("Valeur du consentement :", cookieConsent);
+
+        if (cookieConsent === 'accepted') {
+            $consentBar.hide(); // Masquer la barre si accepté
+        } else if (cookieConsent === 'refused' || !cookieConsent) {
+            $consentBar.show(); // Afficher si refusé ou aucune valeur
         }
     }
 
     // Appeler checkConsent au chargement de la page
     checkConsent();
 
-    // Bouton Accepter
+    // Gestion du bouton Accepter
     $('#vcm-accept-cookies').on('click', function() {
-        console.log("Bouton accepter cliqué.");
         sendCookieConsent('accepted');
     });
 
-    // Bouton Refuser
+    // Gestion du bouton Refuser
     $('#vcm-refuse-cookies').on('click', function() {
-        console.log("Bouton refuser cliqué.");
         sendCookieConsent('refused');
     });
 
+    // Fonction pour envoyer le consentement
     function sendCookieConsent(consent) {
         console.log("Envoi du consentement: " + consent);
+
         $.ajax({
             url: vcmCookieData.ajaxurl,
             type: 'POST',
@@ -54,24 +47,25 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success) {
-                    console.log("Fermeture de la barre de consentement");
-                    
-                    // Masquer immédiatement la bannière
+                    console.log("Consentement enregistré avec succès.");
+
+                    // Masquer la barre de consentement
                     $consentBar.hide();
-                    
-                    // Si le consentement est accepté, recharger la page pour déclencher la collecte
+
+                    // Mettre à jour localStorage
+                    localStorage.setItem('vcm_cookie_consent', consent);
+                    console.log(consent)
+
+                    // Recharger si le consentement est accepté
                     if (consent === 'accepted') {
                         location.reload();
                     }
-                    
-                    // Enregistrer le choix dans le localStorage
-                    localStorage.setItem('vcm_cookie_consent', consent);
                 } else {
-                    console.log("Erreur dans la réponse: ", response);
+                    console.error("Erreur dans la réponse: ", response);
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                console.log("Erreur Ajax: ", textStatus, errorThrown);
+                console.error("Erreur Ajax: ", textStatus, errorThrown);
             }
         });
     }

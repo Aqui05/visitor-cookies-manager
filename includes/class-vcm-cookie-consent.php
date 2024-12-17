@@ -128,12 +128,16 @@ class VCM_Cookie_Consent {
     }
 
     private function is_consent_given() {
-        // Vérifier si le cookie de consentement existe
-        return isset($_COOKIE['vcm_cookie_consent']);
+        // Vérifier si le cookie de consentement existe et que c'est accepter (si oui, ne pas afficher la barre de consentement)
+        return isset($_COOKIE['vcm_cookie_consent']) && $_COOKIE['vcm_cookie_consent'] === 'accepted';
     }
 
     public function is_consent_accepted() {
         return isset($_COOKIE['vcm_cookie_consent']) && 
                $_COOKIE['vcm_cookie_consent'] === 'accepted';
     }
+
+    //avec ce code, chaque fois qu'on actualise la page, le système vérifie si le cookie est là et à la valeur accepter. 
+    //si oui, il lance la collecte des données. Cela fait qu'on récole les données lusieurs fois (à chaque actualisation.)
+    //MOdifier cela pour que la collcte se fasse qu'une fois. A la réactualisation, rien
 }
